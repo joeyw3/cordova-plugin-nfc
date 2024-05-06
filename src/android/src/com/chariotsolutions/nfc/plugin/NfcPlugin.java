@@ -53,6 +53,7 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
     private static final String ENABLED = "enabled";
     private static final String INIT = "init";
     private static final String SHOW_SETTINGS = "showSettings";
+    private static final String IS_WRITABLE = "isWritable";
 
     private static final String NDEF = "ndef";
     private static final String NDEF_MIME = "ndef-mime";
@@ -189,6 +190,8 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
         } else if (action.equalsIgnoreCase(CLOSE)) {
             close(callbackContext);
 
+        } else if (action.equalsIgnoreCase(IS_WRITABLE)) {
+            isWritable(callbackContext);
         } else {
             // invalid action
             return false;
@@ -206,6 +209,58 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
         } else {
             return STATUS_NFC_OK;
         }
+    }
+
+    private void isWritable(final CallbackContext callbackContext) {
+        if(getIntent() == null) {
+            callbackContext.error("Failed to check tag is writable, received null intent");
+
+            return;
+        }
+
+        final Tag tag = savedIntent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        if (tag == null) {
+            callbackContext.error("Failed to check tag is writable, tag is null");
+            return;
+        }
+
+        cordova.getThreadPool().execute(() -> {
+            boolean writable = false;
+            String errorMessage = "Could not check tag is writable";
+
+            Ndef ndef = Ndef.get(tag);
+
+            try {
+                if(ndef != null) {
+                    ndef.connect();
+
+                    if(ndef.isWritable()) {
+                        writable = true;
+                    } else {
+                        writable = false;
+
+                        errorMessage = "Tag is not writable";
+                    }
+
+                    ndef.close();
+                } else {
+                    errorMessage = "Tag is not NDEF";
+                }
+
+            } catch(IOException e) {
+                if (e.getMessage() != null) {
+                    errorMessage = e.getMessage();
+                } else {
+                    errorMessage = e.toString();
+                }
+            }
+
+            if(writable) {
+                callbackContext.success();
+            } else {
+                callbackContext.error(errorMessage);
+            }
+        });
     }
 
     private void readerMode(int flags, CallbackContext callbackContext) {
@@ -420,7 +475,7 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
                 } else {
                     message = "Tag is not NDEF";
                 }
-
+                ndef.close();
             } catch (IOException e) {
                 Log.e(TAG, "Failed to make tag read only", e);
                 if (e.getMessage() != null) {

@@ -582,6 +582,10 @@ var nfc = {
 
     disableReaderMode: function(successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, 'NfcPlugin', 'disableReaderMode', []);
+    },
+
+    isWritable: function(successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, 'NfcPlugin', 'isWritable', []);
     }
 
 };
