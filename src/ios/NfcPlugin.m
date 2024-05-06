@@ -19,6 +19,7 @@
 @property (nonatomic, assign) BOOL returnTagInCallback;
 @property (nonatomic, assign) BOOL returnTagInEvent;
 @property (nonatomic, assign) BOOL keepSessionOpen;
+@property (nonatomic, assign) BOOL makeReadOnly;
 @property (strong, nonatomic) NFCReaderSession *nfcSession API_AVAILABLE(ios(11.0));
 @property (strong, nonatomic) NFCNDEFMessage *messageToWrite API_AVAILABLE(ios(11.0));
 @end
@@ -92,8 +93,11 @@
 - (void)writeTag:(CDVInvokedUrlCommand*)command API_AVAILABLE(ios(13.0)){
     NSLog(@"writeTag");
     
+    NSDictionary *options = [command argumentAtIndex:1];
+    
     self.writeMode = YES;
     self.shouldUseTagReaderSession = NO;
+    self.makeReadOnly = [[options valueForKey:@"makeReadOnly"] boolValue];
     BOOL reusingSession = NO;
     
     NSArray<NSDictionary *> *ndefData = [command argumentAtIndex:0];
@@ -402,16 +406,29 @@
             [self closeSession:session withError:[self localizeString:@"NFCReadOnlyTag" defaultValue:@"Tag is read only."]];
             break;
         case NFCNDEFStatusReadWrite: {
-            
             [tag writeNDEF: self.messageToWrite completionHandler:^(NSError * _Nullable error) {
                 if (error) {
                     NSLog(@"%@", error);
                     [self closeSession:session withError:[self localizeString:@"NFCDataWriteFailed" defaultValue:@"Write failed."]];
                 } else {
                     session.alertMessage = [self localizeString:@"NFCDataWrote" defaultValue:@"Wrote data to NFC tag."];
-                    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-                    [self.commandDelegate sendPluginResult:pluginResult callbackId:self->sessionCallbackId];
-                    [self closeSession:session];
+                    
+                    if(self.makeReadOnly) {
+                        [tag writeLockWithCompletionHandler:^(NSError * _Nullable error) {
+                            if (error) {
+                                NSLog(@"%@", error);
+                                [self closeSession:session withError:[self localizeString:@"NFCLockTagFailed" defaultValue:@"Lock tag failed."]];
+                            } else {
+                                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+                                [self.commandDelegate sendPluginResult:pluginResult callbackId:self->sessionCallbackId];
+                                [self closeSession:session];
+                            }
+                        }];
+                    } else {
+                        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+                        [self.commandDelegate sendPluginResult:pluginResult callbackId:self->sessionCallbackId];
+                        [self closeSession:session];
+                    }
                 }
             }];
             break;
