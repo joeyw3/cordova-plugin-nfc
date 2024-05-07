@@ -134,9 +134,9 @@
         <header-file src="src/ios/NfcPlugin.h" />
         <source-file src="src/ios/NfcPlugin.m" />
 
-        <resource-file src="src/ios/NFC/en.lproj" />
-        <resource-file src="src/ios/NFC/nl.lproj" />
-        <resource-file src="src/ios/NFC/pl.lproj" />
+        <resource-file src="src/ios/NFC/en.lproj/NFC.strings" target="en.lproj/NFC.strings"/>
+        <resource-file src="src/ios/NFC/nl.lproj/NFC.strings" target="nl.lproj/NFC.strings"/>
+        <resource-file src="src/ios/NFC/pl.lproj/NFC.strings" target="pl.lproj/NFC.strings"/>
 
         <!-- frameworks -->
         <framework src="CoreNFC.framework" weak="true" />
