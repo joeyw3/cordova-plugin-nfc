@@ -140,7 +140,7 @@
         }
     }
 
-    self.nfcSession.alertMessage = [self localizeString:@"NFCHoldNearWritableTag" defaultValue:@"Hold near writable NFC tag to update."];
+    self.nfcSession.alertMessage = [self localizeString:@"NFCHoldNearWritableTag" defaultValue:@"Hold near writable NFC tag to write."];
     sessionCallbackId = [command.callbackId copy];
 
     if (reusingSession) {                   // reusing a read session to write
@@ -219,7 +219,7 @@
 - (void) readerSession:(NFCNDEFReaderSession *)session didDetectTags:(NSArray<__kindof id<NFCNDEFTag>> *)tags API_AVAILABLE(ios(13.0)) {
     
     if (tags.count > 1) {
-        session.alertMessage = [self localizeString:@"NFCMoreThanOneTag" defaultValue:@"More than 1 tag detected. Please remove all tags and try again."];
+        session.alertMessage = [self localizeString:@"NFCMoreThanOneTag" defaultValue:@"More than 1 tag detected. Please try again."];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 500 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
             NSLog(@"restaring polling");
             [session restartPolling];
@@ -267,7 +267,7 @@
     NSLog(@"tagReaderSession didDetectTags");
     
     if (tags.count > 1) {
-        session.alertMessage = [self localizeString:@"NFCMoreThanOneTag" defaultValue:@"More than 1 tag detected. Please remove all tags and try again."];
+        session.alertMessage = [self localizeString:@"NFCMoreThanOneTag" defaultValue:@"More than 1 tag detected. Please try again."];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 500 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
             NSLog(@"restaring polling");
             [session restartPolling];
@@ -417,7 +417,7 @@
                         [tag writeLockWithCompletionHandler:^(NSError * _Nullable error) {
                             if (error) {
                                 NSLog(@"%@", error);
-                                [self closeSession:session withError:[self localizeString:@"NFCLockTagFailed" defaultValue:@"Lock tag failed."]];
+                                [self closeSession:session withError:[self localizeString:@"NFCLockTagFailed" defaultValue:@"Make tag read only failed."]];
                             } else {
                                 CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
                                 [self.commandDelegate sendPluginResult:pluginResult callbackId:self->sessionCallbackId];
@@ -638,7 +638,7 @@
 }
 
 - (NSString*) localizeString:(NSString *)key defaultValue:(NSString*) defaultValue {
-    return NSLocalizedString(key, comment: "") != key ? NSLocalizedString(key, comment: "") : defaultValue;
+    return NSLocalizedStringFromTable(key, @"NFC", comment: "") != key ? NSLocalizedStringFromTable(key, @"NFC", comment: "") : defaultValue;
 }
 
 @end
