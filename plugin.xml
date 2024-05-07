@@ -14,6 +14,8 @@
     <repo>https://github.com/EYALIN/community-cordova-plugin-nfc.git.git</repo>
     <issue>https://github.com/EYALIN/community-cordova-plugin-nfc.git/issues</issue>
 
+    <preference name="URL_SCHEME" />
+
     <platform name="android">
         <js-module src="www/phonegap-nfc.js" name="NFC">
             <runs />
@@ -34,6 +36,14 @@
         <config-file target="AndroidManifest.xml" parent="/manifest">
             <uses-permission android:name="android.permission.NFC"/>
             <uses-feature android:name="android.hardware.nfc" android:required="false"/>
+        </config-file>
+
+        <config-file target="AndroidManifest.xml" parent="/manifest/application/activity">
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="$URL_SCHEME" />
+            </intent-filter>
         </config-file>
 
     </platform>
